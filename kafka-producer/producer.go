@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"time"
 
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
@@ -42,12 +44,14 @@ func main() {
 	}()
 
 	topic := "quickstart-events"
-	for _, word := range []string{"This", "is", "some", "test", "Kafka", "Golang", "client"} {
-		p.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          []byte(word),
-		}, nil)
-	}
+	fmt.Printf("message to sent\n>")
+	reader := bufio.NewReader(os.Stdin)
+	word, _ := reader.ReadString('\n')
+
+	p.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		Value:          []byte(word),
+	}, nil)
 
 	p.Flush(15 * 1000)
 
@@ -59,10 +63,9 @@ func main() {
 			fmt.Printf("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
 			rcv := time.Now()
 			fmt.Printf("Received response in %v  ms\n", rcv.Sub(cur))
+			os.Exit(0)
 		} else {
 			fmt.Printf("Consumer error: %v (%v)\n", err, msg)
 		}
 	}
-
-	c.Close()
 }
